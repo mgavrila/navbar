@@ -7,30 +7,34 @@ import { useEffect, useState } from 'react';
 
 export const Nav = ({ eventEmitter }) => {
   const isLoggedIn = useGetIsLoggedIn();
-  const [sessionIds, setSessionIds] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
+  const [eventName, setEventName] = useState(null);
 
-  const { transactions, isSuccessful } = useTrackTransactionStatus({
-    transactionId: sessionIds[0]
+  const { transactions } = useTrackTransactionStatus({
+    transactionId: sessionId,
+    onSuccess: () => {
+      eventEmitter.emitToEvent(eventName, {
+        type: 'result',
+        data: transactions
+      });
+    }
   });
 
   useEffect(() => {
-    eventEmitter.listenTransaction(async (data) => {
-      const { sessionId } = await sendTransactions({
-        transactions: data,
-        signWithoutSending: false,
-        callbackRoute: window.location.pathname,
-        customTransactionInformation: { redirectAfterSign: true }
-      });
+    eventEmitter.listenToAll(async (payload) => {
+      if (payload.type === 'transaction') {
+        const { sessionId } = await sendTransactions({
+          transactions: payload.data,
+          signWithoutSending: false,
+          callbackRoute: window.location.pathname,
+          customTransactionInformation: { redirectAfterSign: true }
+        });
 
-      setSessionIds((prevState) => [...prevState, sessionId]);
+        setEventName(payload.eventName);
+        setSessionId(sessionId);
+      }
     });
   }, []);
-
-  useEffect(() => {
-    if (isSuccessful) {
-      eventEmitter.emitTransactionResult({ transactions });
-    }
-  }, [isSuccessful]);
 
   const handleLogout = () => {
     sessionStorage.clear();
