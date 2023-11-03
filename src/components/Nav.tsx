@@ -1,21 +1,42 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { routes } from '../routes';
 import {
   WalletConnectLoginContainer,
   LedgerLoginContainer
 } from './sdkDappComponents';
-import { useGetIsLoggedIn, useTrackTransactionStatus } from '../hooks';
+import {
+  useGetAccountInfo,
+  useGetIsLoggedIn,
+  useGetLoginInfo,
+  useTrackTransactionStatus
+} from '../hooks';
 import { logout, sendTransactions } from '../helpers/sdkDappHelpers';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MvxLogo from './MvxIcon';
 import { useLogin } from '../hooks';
+import { getSearchParamAddress } from '@multiversx/sdk-dapp/utils/account/getSearchParamAddress';
+import { isWindowAvailable } from '@multiversx/sdk-dapp/utils/isWindowAvailable';
+import { matchRoute } from '@multiversx/sdk-dapp/wrappers/AuthenticatedRoutesWrapper/helpers/matchRoute';
+import { useExecuteOnce } from '../hooks/useExecuteOnce';
+
+const getLocationPathname = () => {
+  if (isWindowAvailable()) {
+    return window.location.pathname;
+  }
+  return '';
+};
+
+const pathname = getLocationPathname();
 
 export const Nav = ({ eventEmitter }) => {
   const isLoggedIn = useGetIsLoggedIn();
+  const navigate = useNavigate();
+  const [searchParams, getSeachParams] = useSearchParams();
   const [sessionId, setSessionId] = useState(null);
   const [eventName, setEventName] = useState(null);
   const [loginData, setLoginData] = useState(null);
-  const { isXPortal, isLedger, setIsLedger, setIsXPortal } =
+
+  const { isXPortal, isLedger, callbackRoute, setIsLedger, setIsXPortal } =
     useLogin(loginData);
 
   const { transactions } = useTrackTransactionStatus({
@@ -27,6 +48,50 @@ export const Nav = ({ eventEmitter }) => {
       });
     }
   });
+
+  const searchParamAddress = getSearchParamAddress();
+  const { isAccountLoading } = useGetAccountInfo();
+  const { walletLogin, loginMethod } = useGetLoginInfo();
+
+  const isOnAuthenticatedRoute = matchRoute(routes, getLocationPathname());
+
+  const isValidWalletLoginAttempt = walletLogin != null && searchParamAddress;
+
+  const isAuthenticated = useMemo(() => {
+    return isLoggedIn && Boolean(loginMethod);
+  }, [isLoggedIn, loginMethod]);
+
+  const shouldRedirect =
+    isOnAuthenticatedRoute &&
+    !isAuthenticated &&
+    walletLogin == null &&
+    !isAccountLoading;
+
+  const executeOnce = useExecuteOnce();
+
+  const redirect = useCallback(() => {
+    if (isLoggedIn) {
+      return;
+    }
+    const uri = callbackRoute ? `?callbackRoute=${callbackRoute}` : '';
+
+    const addressUrl = searchParams.get('address');
+
+    if (!addressUrl) {
+      navigate(`/unlock${uri}`);
+    }
+  }, [navigate, isLoggedIn]);
+
+  useEffect(() => {
+    const paramCallback = searchParams.get('callbackRoute');
+    if (isLoggedIn && getLocationPathname() === '/unlock' && paramCallback) {
+      navigate(paramCallback);
+    }
+  }, [searchParams, isLoggedIn]);
+
+  useEffect(() => {
+    redirect();
+  }, [redirect]);
 
   useEffect(() => {
     eventEmitter.listenToAll(async (payload) => {
@@ -42,9 +107,10 @@ export const Nav = ({ eventEmitter }) => {
           customTransactionInformation: { redirectAfterSign: true }
         });
 
-        setEventName(payload.eventName);
         setSessionId(sessionId);
       }
+
+      setEventName(payload.eventName);
     });
   }, []);
 
@@ -52,6 +118,10 @@ export const Nav = ({ eventEmitter }) => {
     sessionStorage.clear();
     logout(`${window.location.origin}/unlock`, undefined, false);
   };
+
+  if (isAccountLoading && isValidWalletLoginAttempt) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className='flex justify-between gap-1 px-20 py-4'>
@@ -63,7 +133,7 @@ export const Nav = ({ eventEmitter }) => {
         {isLoggedIn && (
           <div className='flex gap-4 text-gray-600'>
             {routes.map((route) => (
-              <Link key={route.name} to={route.href}>
+              <Link key={route.name} to={route.path}>
                 {route.name}
               </Link>
             ))}
@@ -96,6 +166,10 @@ export const Nav = ({ eventEmitter }) => {
           showLoginModal
           showLoginContent
           wrapContentInsideModal
+          onLoginRedirect={() => {
+            setIsXPortal(false);
+            navigate('/dapp1');
+          }}
         />
       )}
 
@@ -108,6 +182,10 @@ export const Nav = ({ eventEmitter }) => {
           showScamPhishingAlert={true}
           onClose={() => setIsLedger(false)}
           nativeAuth
+          onLoginRedirect={() => {
+            setIsLedger(false);
+            navigate('/dapp1');
+          }}
         />
       )}
     </div>

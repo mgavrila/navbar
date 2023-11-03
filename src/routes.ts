@@ -1,10 +1,12 @@
 export const routes = [
   {
     name: 'Dapp1',
-    href: '/dapp1'
+    path: '/dapp1',
+    authenticatedRoute: true
   },
   {
     name: 'Dapp2',
-    href: '/dapp2'
+    path: '/dapp2',
+    authenticatedRoute: true
   }
 ];

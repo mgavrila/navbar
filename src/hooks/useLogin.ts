@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useExtensionLogin, useWebWalletLogin } from './sdkDapphooks';
+import { useNavigate } from 'react-router-dom';
 
 export const useLogin = (loginData) => {
-  const { callbackRoute, token, onLoginRedirect, nativeAuth } = loginData ?? {};
+  const { callbackRoute, token, nativeAuth } = loginData ?? {};
   const [isXPortal, setIsXPortal] = useState(false);
   const [isLedger, setIsLedger] = useState(false);
+  const navigate = useNavigate();
   const [extensionLogin] = useExtensionLogin({
     callbackRoute,
     token,
-    onLoginRedirect,
+    onLoginRedirect: () => {
+      navigate(callbackRoute);
+    },
     nativeAuth
   });
 
@@ -41,5 +45,5 @@ export const useLogin = (loginData) => {
     }
   }, [loginData]);
 
-  return { isXPortal, isLedger, setIsXPortal, setIsLedger };
+  return { isXPortal, isLedger, callbackRoute, setIsXPortal, setIsLedger };
 };

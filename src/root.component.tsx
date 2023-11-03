@@ -4,9 +4,11 @@ import {
   AxiosInterceptorContext,
   TransactionsToastList,
   NotificationModal,
-  SignTransactionsModals
+  SignTransactionsModals,
+  AuthenticatedRoutesWrapper
 } from './components';
 import { BrowserRouter } from 'react-router-dom';
+import { routes } from './routes';
 
 export default function Root(props) {
   return (
@@ -47,6 +49,7 @@ export default function Root(props) {
             <TransactionsToastList />
             <NotificationModal />
             <SignTransactionsModals />
+
             <BrowserRouter>
               <Nav {...props} />
             </BrowserRouter>
