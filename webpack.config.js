@@ -1,7 +1,6 @@
 const { merge } = require('webpack-merge');
 const singleSpaDefaults = require('webpack-config-single-spa-react-ts');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
-
 module.exports = (webpackConfigEnv, argv) => {
   const defaultConfig = singleSpaDefaults({
     orgName: 'amg',
@@ -17,6 +16,5 @@ module.exports = (webpackConfigEnv, argv) => {
       }
     },
     plugins: [new NodePolyfillPlugin()]
-    // modify the webpack config however you'd like to by adding to this object
   });
 };

@@ -6,17 +6,21 @@ import {
   NotificationModal,
   SignTransactionsModals
 } from './components';
+import { BrowserRouter } from 'react-router-dom';
 
 export default function Root(props) {
   return (
     <AxiosInterceptorContext.Provider>
       <AxiosInterceptorContext.Interceptor authenticatedDomanis={[]}>
         <DappProvider
-          environment={'devnet'}
+          environment={'testnet'}
           customNetworkConfig={{
             name: 'customConfig',
             apiTimeout: 6000,
-            walletConnectV2ProjectId: '9b1a9564f91cb659ffe21b73d5c4e2d8'
+            walletConnectV2ProjectId: '9b1a9564f91cb659ffe21b73d5c4e2d8',
+            walletConnectV2RelayAddresses: [
+              'wss://eu-central-1.relay.walletconnect.com'
+            ]
           }}
           dappConfig={{
             shouldUseWebViewProvider: true,
@@ -43,9 +47,9 @@ export default function Root(props) {
             <TransactionsToastList />
             <NotificationModal />
             <SignTransactionsModals />
-            <section>
+            <BrowserRouter>
               <Nav {...props} />
-            </section>
+            </BrowserRouter>
           </AxiosInterceptorContext.Listener>
         </DappProvider>
       </AxiosInterceptorContext.Interceptor>

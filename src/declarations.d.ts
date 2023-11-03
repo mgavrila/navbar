@@ -34,6 +34,6 @@ declare module "*.webp" {
 }
 
 declare module "*.svg" {
-  const src: string;
+  const src: any;
   export default src;
 }

@@ -15,3 +15,6 @@ export { useCheckBatch } from '@multiversx/sdk-dapp/hooks/transactions/batch/tra
 export { useSignTransactions } from '@multiversx/sdk-dapp/hooks/transactions/useSignTransactions';
 export { useBatchTransactionsTracker } from '@multiversx/sdk-dapp/hooks/transactions/batch/tracker/useBatchTransactionsTracker';
 export { useGetSignedTransactions } from '@multiversx/sdk-dapp/hooks/transactions/useGetSignedTransactions';
+export { useExtensionLogin } from '@multiversx/sdk-dapp/hooks/login/useExtensionLogin';
+export { useWalletConnectV2Login } from '@multiversx/sdk-dapp/hooks/login/useWalletConnectV2Login';
+export { useWebWalletLogin } from '@multiversx/sdk-dapp/hooks/login/useWebWalletLogin';
